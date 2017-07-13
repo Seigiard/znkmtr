@@ -41,7 +41,8 @@ function debounce(func, threshold, execAsap) {
     var $visitor = $('#visitor');
     var $distanceInput = $('#distance-input');
     var $symbolsHeight = $('#symbols-height');
-    var $map = $('.mapus');
+    var $mapWrapper = $('.mapus');
+    var map;
 
     var fonts = {
         //original Direct type
@@ -55,17 +56,10 @@ function debounce(func, threshold, execAsap) {
     defaultFontData = fonts.DIRECT;
     currentFontData = defaultFontData;
 
-    mapInitInterval = setInterval(function() {
-        if (window.ymaps && window.ymaps.Map) {
-            initMap();
-            clearInterval(mapInitInterval);
-            mapInitInterval = null;
-        }
-    }, 300);
+    ymaps.ready(initMap);
 
     $('#show-on-map').click(function() {
-        var visible = ($map.css('visibility') == 'visible');
-        visible ? $map.css('visibility', 'hidden') : $map.css('visibility', 'visible');
+        $mapWrapper.toggleClass('mapus--visible');
     });
 
     $distanceInput.on('focus', function() {
@@ -108,7 +102,7 @@ function debounce(func, threshold, execAsap) {
         });
     }
 
-    function handlerInputDistance(event) {
+    function handlerInputDistance() {
         if(!$.isNumeric($distanceInput.val())){
             return;
         }
@@ -149,7 +143,7 @@ function debounce(func, threshold, execAsap) {
 
         currentDistance = distance;
         $distanceInput.data('value', distance);
-        setSignboardSize(distance);
+        setVisitorIcon(distance);
     }
 
     function setCalculatedLetterHeight(lettersHeight) {
@@ -183,15 +177,17 @@ function debounce(func, threshold, execAsap) {
         return 'medium';
     }
 
-    function setSignboardSize(distance) {
+    function setVisitorIcon(distance) {
         var range = _getSignboardRange(distance);
         // var fontSize = (distance * basicFontSize / basicDistance[range]).toFixed(3);
         // $signboardSize.css('fontSize', fontSize + 'em');
-        $visitor.removeClass('visitor--small visitor--medium visitor--big').addClass('visitor--' + range);
+        $visitor.removeClass('scale__homus--small scale__homus--medium scale__homus--big').addClass('scale__homus--' + range);
     }
 
     function initMap() {
-        map = new ymaps.Map("mapus-map", {
+        $('body').addClass('ymaps');
+
+        map = new ymaps.Map("mapus-ymaps", {
             center: [46.4845, 30.7418],
             zoom: 17
         });
@@ -202,7 +198,6 @@ function debounce(func, threshold, execAsap) {
             $distanceInput.val(distance.toFixed(2));
             if (distance) handlerInputDistance();
         });
-
     }
 
 })(Zepto);
