@@ -7,7 +7,6 @@
   <link href="http://fonts.googleapis.com/css?family=PT+Sans:400,400|PT+Serif:400" rel="stylesheet" type="text/css">
   <link rel="stylesheet" href="css/standardize.css">
   <link rel="stylesheet" href="css/shriftomer-3.css">
-  <link rel="stylesheet" href="css/shriftomer-3.1.css">
   <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
   <!-- Yandex.Metrika counter --> <script type="text/javascript"> (function (d, w, c) { (w[c] = w[c] || []).push(function() { try { w.yaCounter34989135 = new Ya.Metrika({ id:34989135, clickmap:true, trackLinks:true, accurateTrackBounce:true, webvisor:true }); } catch(e) { } }); var n = d.getElementsByTagName("script")[0], s = d.createElement("script"), f = function () { n.parentNode.insertBefore(s, n); }; s.type = "text/javascript"; s.async = true; s.src = "https://mc.yandex.ru/metrika/watch.js"; if (w.opera == "[object Opera]") { d.addEventListener("DOMContentLoaded", f, false); } else { f(); } })(document, window, "yandex_metrika_callbacks"); </script> <noscript><div><img src="https://mc.yandex.ru/watch/34989135" style="position:absolute; left:-9999px;" alt="" /></div></noscript> <!-- /Yandex.Metrika counter -->
 
@@ -17,13 +16,13 @@
   <div class="all">
     <header class="namus">
       <h1 class="namus__title">Знакомер</h1>
-      <p class="namus__subtitle">Расчёт оптимального размера шрифта<br />по&nbsp;расстоянию до&nbsp;надписи</p>
+      <p class="namus__subtitle">Расчёт оптимального размера&nbsp;шрифта<br />по&nbsp;расстоянию до&nbsp;надписи</p>
     </header>
 
     <div class="instruments">
-      <div class="headline-sign">
-        <div class="visitor" id="visitor"></div>
-        <div class="distance-line"></div>
+      <div class="scale">
+        <div class="scale__homus" id="visitor"></div>
+        <div class="scale__line"></div>
         <div class="signboard-size" id="signboardSize">
           <div class="signboard">
             <p class="name">Кафе</p>
@@ -42,15 +41,15 @@
         <div class="flex-form">
           <div class="flex-form_column">
             <div class="inputs--distance input-form">
-              <input id="distance-input" class="input-form--input" name="distanciya" required="required" placeholder="Дистанция в метрах" value="10" step="1" min="1" type="number">
               <label for="distance-input" class="input-form--label">Дистанция</label>
+              <input id="distance-input" class="input-form--input" name="distanciya" required="required" placeholder="Дистанция в метрах" value="10" step="1" min="1" type="number">
               <label for="distance-input" class="input-form--postfix">М</label>
             </div>
           </div>
           <div class="flex-form_column">
             <div class="inputs--fontsize input-form">
-              <input id="symbols-height" class="input-form--input" name="letters" required="required" placeholder="Высота букв в милиметрах" value="27.32" min="1" type="number">
               <label for="symbols-height" class="input-form--label">Высота букв</label>
+              <input id="symbols-height" class="input-form--input" name="letters" required="required" placeholder="Высота букв в милиметрах" value="27.32" min="1" type="number">
               <label for="symbols-height" class="input-form--postfix">мм</label>
             </div>
           </div>
@@ -58,13 +57,15 @@
         <div class="inputs--checkbox">
           <label for="show-on-map" class="clearfix js-map">
             <input id="show-on-map" class="checkbox" type="checkbox">
-            <span class="point-text _text">Карта с линейкой</span>
+            <span>Карта с линейкой</span>
           </label>
         </div>
       </div>
     </div>
 
-    <div id="mapus-map" class="map mapus"></div>
+    <div class="mapus">
+      <div id="mapus-ymaps" class="map"></div>
+    </div>
 
     <div class="description">
       <div class="description__image">
