@@ -333,7 +333,7 @@ input[type=number]::-webkit-outer-spin-button {
 /* MAP */
 .mapus {
   clear: both;
-  margin: 33px auto 100px;
+  margin: 33px auto 25px;
   height: 0px;
   overflow: hidden;
   background-color: #fff;
