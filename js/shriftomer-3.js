@@ -75,6 +75,9 @@ function debounce(func, threshold, execAsap) {
     setInputValidation($distanceInput);
     setInputValidation($symbolsHeight);
 
+    $distanceInput.val(Math.floor(Math.random() * 50) + 1);
+    handlerInputDistance();
+
     function setInputValidation($element) {
         $element.on('keydown', function(e) {
             var value = $element.data('value');
