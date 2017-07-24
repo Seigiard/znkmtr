@@ -453,26 +453,13 @@ input[type=number]::-webkit-outer-spin-button {
 }
 .footer a {
   border: none;
-  border-bottom: 1px solid #b4d6f3;
+  border-bottom: 1px solid #8FBADD;
   color: #2075bc;
   display: inline-block;
   height: 1.05em;
 }
 
 .footer a:hover {
-  border-bottom-color: #88beec;
-  color: #195a90;
-}
-.footer__icon--odessa {
-  background: url(../images/yakor.gif) no-repeat right bottom;
-  background-size: 16px 21px;
-  display: inline-block;
-  padding: 4px 18px 0px 0;
-  margin-right: 1px;
-}
-.footer__icon--practicum {
-  background: url(../images/praktikum-logo.gif) no-repeat right bottom;
-  background-size: 16px 21px;
-  display: inline-block;
-  padding: 2px 20px 1px 0;
+  border-bottom-color: #E3B0B1);
+  color: #C86263;
 }
