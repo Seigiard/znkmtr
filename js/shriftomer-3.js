@@ -31,19 +31,6 @@ function debounce(func, threshold, execAsap) {
     var distanceBoundSmallToMedium = 15;
     var distanceBoundMediumToBig = 50;
 
-    var basicDistance = {
-        'small': 10,
-        'medium': 20,
-        'big': 70
-    };
-
-    var $signboardSize = $('#signboardSize');
-    var $visitor = $('#visitor');
-    var $distanceInput = $('#distance-input');
-    var $symbolsHeight = $('#symbols-height');
-    var $mapWrapper = $('.mapus');
-    var map;
-
     var fonts = {
         //original Direct type
         DIRECT: {
@@ -52,6 +39,13 @@ function debounce(func, threshold, execAsap) {
             ratio: 2.732
         }
     };
+
+    var $signboardSize = $('#signboardSize');
+    var $visitor = $('#visitor');
+    var $distanceInput = $('#distance-input');
+    var $symbolsHeight = $('#symbols-height');
+    var $mapWrapper = $('.mapus');
+    var map;
 
     defaultFontData = fonts.DIRECT;
     currentFontData = defaultFontData;
@@ -182,8 +176,6 @@ function debounce(func, threshold, execAsap) {
 
     function setVisitorIcon(distance) {
         var range = _getSignboardRange(distance);
-        // var fontSize = (distance * basicFontSize / basicDistance[range]).toFixed(3);
-        // $signboardSize.css('fontSize', fontSize + 'em');
         $visitor.removeClass('scale__homus--small scale__homus--medium scale__homus--big').addClass('scale__homus--' + range);
     }
 
