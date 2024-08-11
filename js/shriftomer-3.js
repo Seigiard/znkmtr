@@ -1,220 +1,196 @@
-(function ($) {
-    'use strict';
+const createStore = window.unistore
 
-    var currentFontData, defaultFontData,
-        currentDistance, currentHeight;
-
-    var basicFontSize = 2.563;
-    var distanceBoundSmallToMedium = 15;
-    var distanceBoundMediumToBig = 50;
-
-    var basicDistance = {
-        'small': 10,
-        'medium': 20,
-        'big': 70
-    };
-
-    var $signboardSize = $('#signboardSize');
-    var $visitor = $('#visitor');
-    var $distanceInput = $('#distance-input');
-    var $symbolsHeight = $('#symbols-height');
-    var $mapWrapper = $('.mapus');
-
-    var fonts = {
+const settings = {
+    fonts: {
         //original Direct type
         DIRECT: {
             k: 4.8780487804878,
             m: 51.7,
             ratio: 2.732
         }
-    };
+    },
+    activeFont: 'DIRECT',
+    signboardRange: {
+        smallToMedium: 15,
+        mediumToBig: 50
+    },
+};
 
-    defaultFontData = fonts.DIRECT;
-    currentFontData = defaultFontData;
+const mapElementId = 'mapus-osmaps';
 
-    initMap()
+const $distanceInput = document.getElementById('distance-input');
+const $symbolsHeight = document.getElementById('symbols-height');
+const $visitorIcon = document.getElementById('visitor');
+const $showOnMap = document.getElementById('show-on-map');
+const $mapWrapper = document.getElementsByClassName('mapus')[0];
 
-    $('#show-on-map').on('click', function () {
-        $mapWrapper.toggleClass('mapus--visible')
+const store = createStore({
+    manualInputDistanceInM: false,
+    distanceInM: 0,
+    manualInputSymbolsHeightInMm: false,
+    symbolsHeightInMm: 0,
+});
+
+
+const updateDistance = store.action((_, distanceInM) => {
+    return {
+        distanceInM,
+        symbolsHeightInMm: getLetterHeight(distanceInM)
+    }
+});
+
+const updateSymbolsHeight = store.action((_, symbolsHeightInMm) => {
+    return {
+        symbolsHeightInMm,
+        distanceInM: getDistance(symbolsHeightInMm)
+    }
+});
+
+const updateManualInputDistance = store.action((_, mode) => ({ manualInputDistanceInM: mode }));
+
+const updateManualInputSymbolsHeight = store.action((_, mode) => ({
+    manualInputSymbolsHeightInMm: mode
+}));
+
+const uiStore = createStore({
+    visitorIcon: 'small'
+});
+
+store.subscribe(({ manualInputDistanceInM, distanceInM, manualInputSymbolsHeightInMm, symbolsHeightInMm }) => {
+    if (!manualInputDistanceInM) {
+        $distanceInput.value = distanceInM;
+    }
+
+    if (!manualInputSymbolsHeightInMm) {
+        $symbolsHeight.value = symbolsHeightInMm;
+    }
+
+    const range = getSignboardRange(distanceInM);
+    uiStore.setState({ visitorIcon: range });
+});
+
+uiStore.subscribe(({ visitorIcon }) => {
+    $visitorIcon.dataset.range = visitorIcon;
+});
+
+$showOnMap.addEventListener('click', function () {
+    $mapWrapper.classList.toggle('mapus--visible')
+});
+
+setupInput($distanceInput, updateDistance, updateManualInputDistance);
+setupInput($symbolsHeight, updateSymbolsHeight, updateManualInputSymbolsHeight);
+
+initMap();
+
+function getLetterHeight(distance) {
+    return roundNumber(distance * settings.fonts[settings.activeFont].ratio);
+}
+
+function getDistance(letterHeight) {
+    return roundNumber(letterHeight / settings.fonts[settings.activeFont].ratio);
+}
+
+function getSignboardRange(distance) {
+    const { smallToMedium, mediumToBig } = settings.signboardRange;
+
+    if (distance < smallToMedium) {
+        return 'small';
+    }
+
+    if (distance > mediumToBig) {
+        return 'big';
+    }
+
+    return 'medium';
+}
+
+function initMap() {
+    document.body.classList.add('osmaps')
+
+    // Creating map options
+    var mapOptions = {
+        center: [46.4845, 30.7418],
+        zoom: 17
+    }
+
+    // Creating a map object
+    var map = new L.map(mapElementId, mapOptions);
+
+    // Creating a Layer object
+    var layer = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+
+    // Adding layer to the map
+    map.addLayer(layer);
+
+    L.control.ruler({
+        position: 'topleft',
+        fnTooltipText: function (distanceInKm) {
+            const distance = roundNumber(distanceInKm * 1000);
+            const result = []
+
+            result.push('<b>Расстояние:</b>&nbsp;' + distance + '&nbsp;м')
+            result.push('<b>Высота букв:</b>&nbsp;' + getLetterHeight(distance) + '&nbsp;мм');
+
+
+            return result.join('<br>');
+        },
+        onSet: function (distanceInKm) {
+            updateDistance(roundNumber(distanceInKm * 1000));
+        }
+    }).addTo(map);
+}
+
+function roundNumber(num, scale = 2) {
+    if (!("" + num).includes("e")) {
+        return +(Math.round(num + "e+" + scale) + "e-" + scale);
+    } else {
+        var arr = ("" + num).split("e");
+        var sig = "";
+        if (+arr[1] + scale > 0) {
+            sig = "+";
+        }
+        return +(Math.round(+arr[0] + "e" + sig + (+arr[1] + scale)) + "e-" + scale);
+    }
+}
+
+function setupInput($element, updateValue, updateManualInput) {
+    $element.addEventListener('focus', function () {
+        updateManualInput(true);
     });
-
-    $distanceInput.on('focus', function () {
-        setDistanseSize($($distanceInput).val());
+    $element.addEventListener('blur', function () {
+        updateManualInput(false);
     });
-    $symbolsHeight.on('focus', function () {
-        setLetterHeight($($symbolsHeight).val());
+    $element.addEventListener('input', function (e) {
+        const debouncedUpdateValue = debounce(updateValue, 150);
+        debouncedUpdateValue(+this.value);
     });
+    $element.addEventListener('keydown', function (e) {
+        var value = e.target.value;
 
-    $distanceInput.on('change blur keyup', debounce(handlerInputDistance, 100));
-    $symbolsHeight.on('change blur keyup', debounce(handlerInputLettersHeight, 100));
+        if (e.ctrlKey || e.altKey || e.metaKey || e.isComposing || e.key === 'Backspace' || e.key === 'Delete' || e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Tab') {
+            return;
+        }
 
-    setInputValidation($distanceInput);
-    setInputValidation($symbolsHeight);
+        // 48-57 - digits
+        // 96-105 - digits in num pad
+        // 190 - dot
 
-    function setInputValidation($element) {
-        $element.on('keydown', function (e) {
-            var value = $element.data('value');
+        const isDigitKeyCode = (e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105);
+        const isDot = e.keyCode === 190;
 
+        if (!isDigitKeyCode && !isDot) {
+            e.preventDefault();
+        } else {
             if (
-                // ($.inArray(e.keyCode, [9, 37, 38, 39, 40, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 8, 13, 190, 188]) == -1)
-                // tab, digits, digits in num pad, 'back', 'enter', '.', ','
-                // ||
-                ($.inArray(e.keyCode, [189, 187, 69]) > -1)
-                ||
-                (e.keyCode == 190 && ('' + value).indexOf(',') > -1) // not allow dot and comma '.'
-                ||
                 (e.keyCode == 190 && ('' + value).indexOf('.') > -1) // not allow dot and dot '.'
                 ||
-                (e.keyCode == 188 && ('' + value).indexOf(',') > -1) // not allow comma and dot ','
-                ||
-                (e.keyCode == 188 && ('' + value).indexOf('.') > -1) // not allow comma and comma ','
-                ||
                 (e.keyCode == 190 && value.length == 0) // not allow dot '.' at the begining
-                ||
-                (e.keyCode == 188 && value.length == 0) // not allow dot ',' at the begining
             ) {
                 e.preventDefault();
             }
-        });
-    }
-
-    function handlerInputDistance() {
-        if (!$.isNumeric($distanceInput.val())) {
-            return;
         }
-
-        var distance = +$distanceInput.val();
-        var lettersHeight = getLetterHeight(distance);
-
-        setCalculatedLetterHeight(lettersHeight);
-        setDistanseSize(distance);
-    }
-
-    function handlerInputLettersHeight() {
-        if (!$.isNumeric($symbolsHeight.val())) {
-            return;
-        }
-
-        var lettersHeight = +$symbolsHeight.val();
-        var distance = getDistance(lettersHeight)
-
-        setLetterHeight(lettersHeight);
-        setCalculatedDistanseSize(distance);
-    }
-
-    function getLetterHeight(distance) {
-        return distance * currentFontData.ratio;
-    }
-
-    function getDistance(lettersHeight) {
-        return lettersHeight / currentFontData.ratio;
-    }
-
-    function getFixedString(value) {
-        return value.toFixed(2);
-    }
-
-    function setCalculatedDistanseSize(distance) {
-        if (distance != distance.toFixed(2)) {
-            $distanceInput.val(distance.toFixed(2));
-        } else {
-            $distanceInput.val(distance);
-        }
-
-        setDistanseSize(distance);
-    }
-
-    function setDistanseSize(distance) {
-        if (currentDistance === distance) {
-            return;
-        }
-
-        currentDistance = distance;
-        $distanceInput.data('value', distance);
-        setVisitorIcon(distance);
-    }
-
-    function setCalculatedLetterHeight(lettersHeight) {
-        if (lettersHeight != lettersHeight.toFixed(2)) {
-            $symbolsHeight.val(lettersHeight.toFixed(2));
-        } else {
-            $symbolsHeight.val(lettersHeight);
-        }
-
-        setLetterHeight(lettersHeight);
-    }
-
-    function setLetterHeight(lettersHeight) {
-        if (lettersHeight === currentHeight) {
-            return;
-        }
-
-        currentHeight = lettersHeight;
-        $symbolsHeight.data('value', lettersHeight);
-    }
-
-    function _getSignboardRange(distance) {
-        if (distance < distanceBoundSmallToMedium) {
-            return 'small';
-        }
-
-        if (distance > distanceBoundMediumToBig) {
-            return 'big';
-        }
-
-        return 'medium';
-    }
-
-    function setVisitorIcon(distance) {
-        var range = _getSignboardRange(distance);
-        $visitor.removeClass('scale__homus--small', 'scale__homus--medium', 'scale__homus--big')
-        $visitor.addClass('scale__homus--' + range);
-
-        // var fontSize = (distance * basicFontSize / basicDistance[range]).toFixed(3);
-        // $signboardSize.css('fontSize', fontSize + 'em');
-    }
-
-
-    function initMap() {
-        document.body.classList.add('osmaps')
-
-        // Creating map options
-        var mapOptions = {
-            center: [46.4845, 30.7418],
-            zoom: 17
-        }
-
-        // Creating a map object
-        var map = new L.map('mapus-osmaps', mapOptions);
-
-        // Creating a Layer object
-        var layer = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
-
-        // Adding layer to the map
-        map.addLayer(layer);
-
-        L.control.ruler({
-            position: 'topleft',
-            fnTooltipText: function (distanceInKm) {
-                const distance = distanceInKm * 1000;
-                const result = []
-
-                result.push('<b>Расстояние:</b>&nbsp;' + getFixedString(distance) + '&nbsp;м')
-                result.push('<b>Высота букв:</b>&nbsp;' + getFixedString(getLetterHeight(distance)) + '&nbsp;мм');
-
-
-                return result.join('<br>');
-            },
-            onSet: function (distanceInKm) {
-                var distance = distanceInKm * 1000;
-                var lettersHeight = getLetterHeight(distance);
-
-                setCalculatedLetterHeight(lettersHeight);
-                setCalculatedDistanseSize(distance);
-            }
-        }).addTo(map);
-    }
-})(Zepto);
+    });
+}
 
 function debounce(func, threshold, execAsap) {
     var timeout;
