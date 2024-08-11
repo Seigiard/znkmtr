@@ -16,6 +16,13 @@ const settings = {
     },
 };
 
+const store = createStore({
+    manualInputDistanceInM: false,
+    distanceInM: 0,
+    manualInputSymbolsHeightInMm: false,
+    symbolsHeightInMm: 0,
+});
+
 const mapElementId = 'mapus-osmaps';
 
 const $distanceInput = document.getElementById('distance-input');
@@ -23,13 +30,6 @@ const $symbolsHeight = document.getElementById('symbols-height');
 const $visitorIcon = document.getElementById('visitor');
 const $showOnMap = document.getElementById('show-on-map');
 const $mapWrapper = document.getElementsByClassName('mapus')[0];
-
-const store = createStore({
-    manualInputDistanceInM: false,
-    distanceInM: 0,
-    manualInputSymbolsHeightInMm: false,
-    symbolsHeightInMm: 0,
-});
 
 
 const updateDistance = store.action((_, distanceInM) => {
@@ -80,7 +80,8 @@ $showOnMap.addEventListener('click', function () {
 setupInput($distanceInput, updateDistance, updateManualInputDistance);
 setupInput($symbolsHeight, updateSymbolsHeight, updateManualInputSymbolsHeight);
 
-initMap();
+updateDistance(10);
+
 
 function getLetterHeight(distance) {
     return roundNumber(distance * settings.fonts[settings.activeFont].ratio);
@@ -102,42 +103,6 @@ function getSignboardRange(distance) {
     }
 
     return 'medium';
-}
-
-function initMap() {
-    document.body.classList.add('osmaps')
-
-    // Creating map options
-    var mapOptions = {
-        center: [46.4845, 30.7418],
-        zoom: 17
-    }
-
-    // Creating a map object
-    var map = new L.map(mapElementId, mapOptions);
-
-    // Creating a Layer object
-    var layer = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
-
-    // Adding layer to the map
-    map.addLayer(layer);
-
-    L.control.ruler({
-        position: 'topleft',
-        fnTooltipText: function (distanceInKm) {
-            const distance = roundNumber(distanceInKm * 1000);
-            const result = []
-
-            result.push('<b>Расстояние:</b>&nbsp;' + distance + '&nbsp;м')
-            result.push('<b>Высота букв:</b>&nbsp;' + getLetterHeight(distance) + '&nbsp;мм');
-
-
-            return result.join('<br>');
-        },
-        onSet: function (distanceInKm) {
-            updateDistance(roundNumber(distanceInKm * 1000));
-        }
-    }).addTo(map);
 }
 
 function roundNumber(num, scale = 2) {
@@ -166,19 +131,22 @@ function setupInput($element, updateValue, updateManualInput) {
     });
     $element.addEventListener('keydown', function (e) {
         var value = e.target.value;
-
-        if (e.ctrlKey || e.altKey || e.metaKey || e.isComposing || e.key === 'Backspace' || e.key === 'Delete' || e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Tab') {
-            return;
-        }
+        const keyCode = e.keyCode;
 
         // 48-57 - digits
         // 96-105 - digits in num pad
         // 190 - dot
 
-        const isDigitKeyCode = (e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105);
-        const isDot = e.keyCode === 190;
+        const functionalKeyCodes = [
+            8, 9, 13, 16, 17, 18, 19, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46,
+            112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 144, 145
+        ];
 
-        if (!isDigitKeyCode && !isDot) {
+        const isFunctionalKey = functionalKeyCodes.includes(e.keyCode) || e.ctrlKey || e.altKey || e.metaKey || e.isComposing;
+        const isDigitKeyCode = (keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 105);
+        const isDot = keyCode === 190;
+
+        if (!isFunctionalKey && !isDigitKeyCode && !isDot) {
             e.preventDefault();
         } else {
             if (
