@@ -88,7 +88,7 @@ input[type='number']::-webkit-outer-spin-button {
 .scale__homus {
   z-index: 0;
   margin: 0 0 0 0;
-  background-image: url('../images/man-small.png');
+  background-image: url('../images/man-small.svg');
   width: 70px;
   height: 140px;
   background-repeat: no-repeat;
@@ -100,15 +100,15 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 .scale__homus--small {
-  background-image: url('../images/man-small.png');
+  background-image: url('../images/man-small.svg');
 }
 
 .scale__homus--medium {
-  background-image: url('../images/man-medium.png');
+  background-image: url('../images/man-medium.svg');
 }
 
 .scale__homus--big {
-  background-image: url('../images/man-big.png');
+  background-image: url('../images/man-big.svg');
 }
 
 .scale__line {

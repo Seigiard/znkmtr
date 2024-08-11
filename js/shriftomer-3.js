@@ -34,7 +34,7 @@
 
     initMap()
 
-    $$('#show-on-map').on('click', function () {
+    $('#show-on-map').on('click', function () {
         $mapWrapper.toggleClass('mapus--visible')
     });
 
@@ -84,7 +84,7 @@
         }
 
         var distance = +$distanceInput.val();
-        var lettersHeight = distance * currentFontData.ratio;
+        var lettersHeight = getLetterHeight(distance);
 
         setCalculatedLetterHeight(lettersHeight);
         setDistanseSize(distance);
@@ -96,10 +96,22 @@
         }
 
         var lettersHeight = +$symbolsHeight.val();
-        var distance = lettersHeight / currentFontData.ratio;
+        var distance = getDistance(lettersHeight)
 
         setLetterHeight(lettersHeight);
         setCalculatedDistanseSize(distance);
+    }
+
+    function getLetterHeight(distance) {
+        return distance * currentFontData.ratio;
+    }
+
+    function getDistance(lettersHeight) {
+        return lettersHeight / currentFontData.ratio;
+    }
+
+    function getFixedString(value) {
+        return value.toFixed(2);
     }
 
     function setCalculatedDistanseSize(distance) {
@@ -161,33 +173,48 @@
         // var fontSize = (distance * basicFontSize / basicDistance[range]).toFixed(3);
         // $signboardSize.css('fontSize', fontSize + 'em');
     }
-})(Zepto);
 
 
-function initMap() {
-    document.body.classList.add('osmaps')
+    function initMap() {
+        document.body.classList.add('osmaps')
 
-    // Creating map options
-    var mapOptions = {
-        center: [46.4845, 30.7418],
-        zoom: 17
+        // Creating map options
+        var mapOptions = {
+            center: [46.4845, 30.7418],
+            zoom: 17
+        }
+
+        // Creating a map object
+        var map = new L.map('mapus-osmaps', mapOptions);
+
+        // Creating a Layer object
+        var layer = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+
+        // Adding layer to the map
+        map.addLayer(layer);
+
+        L.control.ruler({
+            position: 'topleft',
+            fnTooltipText: function (distanceInKm) {
+                const distance = distanceInKm * 1000;
+                const result = []
+
+                result.push('<b>Расстояние:</b>&nbsp;' + getFixedString(distance) + '&nbsp;м')
+                result.push('<b>Высота букв:</b>&nbsp;' + getFixedString(getLetterHeight(distance)) + '&nbsp;мм');
+
+
+                return result.join('<br>');
+            },
+            onSet: function (distanceInKm) {
+                var distance = distanceInKm * 1000;
+                var lettersHeight = getLetterHeight(distance);
+
+                setCalculatedLetterHeight(lettersHeight);
+                setCalculatedDistanseSize(distance);
+            }
+        }).addTo(map);
     }
-
-    // Creating a map object
-    var map = new L.map('mapus-osmaps', mapOptions);
-
-    // Creating a Layer object
-    var layer = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
-
-    // Adding layer to the map
-    map.addLayer(layer);
-
-    // map.behaviors.get('ruler').geometry.events.add('change', function (e) {
-    //     var distance = map.behaviors.get('ruler').geometry.getDistance();
-    //     $distanceInput.val(distance.toFixed(2));
-    //     if (distance) handlerInputDistance();
-    // });
-}
+})(Zepto);
 
 function debounce(func, threshold, execAsap) {
     var timeout;
