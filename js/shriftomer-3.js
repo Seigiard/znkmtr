@@ -1,31 +1,8 @@
-function debounce(func, threshold, execAsap) {
-    var timeout;
-
-    return function debounced() {
-        var obj = this,
-            args = arguments;
-
-        function delayed() {
-            if (!execAsap)
-                func.apply(obj, args);
-            timeout = null;
-        };
-
-        if (timeout)
-            clearTimeout(timeout);
-        else if (execAsap)
-            func.apply(obj, args);
-
-        timeout = setTimeout(delayed, threshold || 100);
-    };
-}
-
-(function($) {
+(function ($) {
     'use strict';
 
     var currentFontData, defaultFontData,
-        bypassCalculationForDistance, bypassCalculationForHeight,
-        currentDistance, currentHeight, mapInitInterval, map;
+        currentDistance, currentHeight;
 
     var basicFontSize = 2.563;
     var distanceBoundSmallToMedium = 15;
@@ -42,7 +19,6 @@ function debounce(func, threshold, execAsap) {
     var $distanceInput = $('#distance-input');
     var $symbolsHeight = $('#symbols-height');
     var $mapWrapper = $('.mapus');
-    var map;
 
     var fonts = {
         //original Direct type
@@ -56,16 +32,16 @@ function debounce(func, threshold, execAsap) {
     defaultFontData = fonts.DIRECT;
     currentFontData = defaultFontData;
 
-    ymaps.ready(initMap);
+    initMap()
 
-    $('#show-on-map').click(function() {
-        $mapWrapper.toggleClass('mapus--visible');
+    $$('#show-on-map').on('click', function () {
+        $mapWrapper.toggleClass('mapus--visible')
     });
 
-    $distanceInput.on('focus', function() {
+    $distanceInput.on('focus', function () {
         setDistanseSize($($distanceInput).val());
     });
-    $symbolsHeight.on('focus', function() {
+    $symbolsHeight.on('focus', function () {
         setLetterHeight($($symbolsHeight).val());
     });
 
@@ -76,7 +52,7 @@ function debounce(func, threshold, execAsap) {
     setInputValidation($symbolsHeight);
 
     function setInputValidation($element) {
-        $element.on('keydown', function(e) {
+        $element.on('keydown', function (e) {
             var value = $element.data('value');
 
             if (
@@ -85,13 +61,13 @@ function debounce(func, threshold, execAsap) {
                 // ||
                 ($.inArray(e.keyCode, [189, 187, 69]) > -1)
                 ||
-                (e.keyCode == 190 && (''+value).indexOf(',') > -1) // not allow dot and comma '.'
+                (e.keyCode == 190 && ('' + value).indexOf(',') > -1) // not allow dot and comma '.'
                 ||
-                (e.keyCode == 190 && (''+value).indexOf('.') > -1) // not allow dot and dot '.'
+                (e.keyCode == 190 && ('' + value).indexOf('.') > -1) // not allow dot and dot '.'
                 ||
-                (e.keyCode == 188 && (''+value).indexOf(',') > -1) // not allow comma and dot ','
+                (e.keyCode == 188 && ('' + value).indexOf(',') > -1) // not allow comma and dot ','
                 ||
-                (e.keyCode == 188 && (''+value).indexOf('.') > -1) // not allow comma and comma ','
+                (e.keyCode == 188 && ('' + value).indexOf('.') > -1) // not allow comma and comma ','
                 ||
                 (e.keyCode == 190 && value.length == 0) // not allow dot '.' at the begining
                 ||
@@ -103,7 +79,7 @@ function debounce(func, threshold, execAsap) {
     }
 
     function handlerInputDistance() {
-        if(!$.isNumeric($distanceInput.val())){
+        if (!$.isNumeric($distanceInput.val())) {
             return;
         }
 
@@ -115,7 +91,7 @@ function debounce(func, threshold, execAsap) {
     }
 
     function handlerInputLettersHeight() {
-        if(!$.isNumeric($symbolsHeight.val())){
+        if (!$.isNumeric($symbolsHeight.val())) {
             return;
         }
 
@@ -179,25 +155,58 @@ function debounce(func, threshold, execAsap) {
 
     function setVisitorIcon(distance) {
         var range = _getSignboardRange(distance);
+        $visitor.removeClass('scale__homus--small', 'scale__homus--medium', 'scale__homus--big')
+        $visitor.addClass('scale__homus--' + range);
+
         // var fontSize = (distance * basicFontSize / basicDistance[range]).toFixed(3);
         // $signboardSize.css('fontSize', fontSize + 'em');
-        $visitor.removeClass('scale__homus--small scale__homus--medium scale__homus--big').addClass('scale__homus--' + range);
     }
-
-    function initMap() {
-        $('body').addClass('ymaps');
-
-        map = new ymaps.Map("mapus-ymaps", {
-            center: [46.4845, 30.7418],
-            zoom: 17
-        });
-
-        map.behaviors.get('ruler').geometry.events.add('change', function(e) {
-            console.warn(map.behaviors.get('ruler').geometry.getDistance());
-            var distance = map.behaviors.get('ruler').geometry.getDistance();
-            $distanceInput.val(distance.toFixed(2));
-            if (distance) handlerInputDistance();
-        });
-    }
-
 })(Zepto);
+
+
+function initMap() {
+    document.body.classList.add('osmaps')
+
+    // Creating map options
+    var mapOptions = {
+        center: [46.4845, 30.7418],
+        zoom: 17
+    }
+
+    // Creating a map object
+    var map = new L.map('mapus-osmaps', mapOptions);
+
+    // Creating a Layer object
+    var layer = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+
+    // Adding layer to the map
+    map.addLayer(layer);
+
+    // map.behaviors.get('ruler').geometry.events.add('change', function (e) {
+    //     var distance = map.behaviors.get('ruler').geometry.getDistance();
+    //     $distanceInput.val(distance.toFixed(2));
+    //     if (distance) handlerInputDistance();
+    // });
+}
+
+function debounce(func, threshold, execAsap) {
+    var timeout;
+
+    return function debounced() {
+        var obj = this,
+            args = arguments;
+
+        function delayed() {
+            if (!execAsap)
+                func.apply(obj, args);
+            timeout = null;
+        };
+
+        if (timeout)
+            clearTimeout(timeout);
+        else if (execAsap)
+            func.apply(obj, args);
+
+        timeout = setTimeout(delayed, threshold || 100);
+    };
+}
