@@ -77,11 +77,16 @@ $showOnMap.addEventListener('click', function () {
     $mapWrapper.classList.toggle('mapus--visible')
 });
 
+// Validate input into limits
+$distanceInput.addEventListener('input', function (e) {
+})
+
+// Sync with signals
 setupInput($distanceInput, updateDistance, updateManualInputDistance);
 setupInput($symbolsHeight, updateSymbolsHeight, updateManualInputSymbolsHeight);
 
-updateDistance(10);
 
+updateDistance(10);
 
 function getLetterHeight(distance) {
     return roundNumber(distance * settings.fonts[settings.activeFont].ratio);
@@ -119,6 +124,8 @@ function roundNumber(num, scale = 2) {
 }
 
 function setupInput($element, updateValue, updateManualInput) {
+    const debouncedUpdateValue = debounce(updateValue, 150);
+
     $element.addEventListener('focus', function () {
         updateManualInput(true);
     });
@@ -126,8 +133,17 @@ function setupInput($element, updateValue, updateManualInput) {
         updateManualInput(false);
     });
     $element.addEventListener('input', function (e) {
-        const debouncedUpdateValue = debounce(updateValue, 150);
-        debouncedUpdateValue(+this.value);
+        const value = e.target.value;
+
+        // If value is not a number, do nothing
+        if (isNaN(Number(value))) {
+            return
+        }
+
+        const validateInputNumberValue = validateInputNumberElementValue($element, value);
+
+        e.target.value = validateInputNumberValue;
+        debouncedUpdateValue(validateInputNumberValue);
     });
     $element.addEventListener('keydown', function (e) {
         var value = e.target.value;
@@ -158,6 +174,19 @@ function setupInput($element, updateValue, updateManualInput) {
             }
         }
     });
+}
+
+function validateInputNumberElementValue($element, value) {
+    const numberAsValue = Number(value);
+    if ($element.min && numberAsValue < $element.min) {
+        return $element.min;
+    }
+
+    if ($element.max && numberAsValue > $element.max) {
+        return $element.max;
+    }
+
+    return numberAsValue;
 }
 
 function debounce(func, threshold, execAsap) {
