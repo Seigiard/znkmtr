@@ -5,8 +5,8 @@ const attributeLabels = [
 ].join(' / ');
 
 initMap({
-    center: [46.4849, 30.7419],
-    zoom: 19, // 20 max
+    center: [46.48491831248254, 30.739801915137466],
+    zoom: 17, // 20 max
     attributionControl: false
 });
 
@@ -34,8 +34,8 @@ function initMap(mapOptions) {
             const distance = roundNumber(distanceInKm * 1000);
             const result = []
 
-            result.push('<b>Расстояние:</b>&nbsp;' + distance + '&nbsp;м')
-            result.push('<b>Высота букв:</b>&nbsp;' + getLetterHeight(distance) + '&nbsp;мм');
+            result.push('<b>Відстань:</b>&nbsp;' + distance + '&nbsp;м')
+            result.push('<b>Висота букв:</b>&nbsp;' + getLetterHeight(distance) + '&nbsp;мм');
 
 
             return result.join('<br>');

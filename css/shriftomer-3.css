@@ -342,19 +342,15 @@ input[type='number']::-webkit-outer-spin-button {
 /* MAP */
 .mapus {
   clear: both;
-  margin: 33px auto 25px;
-  height: 0px;
+  margin: 33px auto 0;
+  height: 316px;
   overflow: hidden;
-  background-color: #fff;
+  background-color: #f2f2f4;
   transition: height 0.3s ease-out, margin-bottom 0.3s ease-out,
     background-color 0.2s ease-in;
   max-width: 799px;
 }
-.mapus--visible {
-  height: 316px;
-  margin-bottom: 0;
-  background-color: #f2f2f4;
-}
+
 .map {
   width: 100%;
   height: 316px;

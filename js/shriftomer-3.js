@@ -28,7 +28,6 @@ const mapElementId = 'mapus-osmaps';
 const $distanceInput = document.getElementById('distance-input');
 const $symbolsHeight = document.getElementById('symbols-height');
 const $visitorIcon = document.getElementById('visitor');
-const $showOnMap = document.getElementById('show-on-map');
 const $mapWrapper = document.getElementsByClassName('mapus')[0];
 
 
@@ -71,10 +70,6 @@ store.subscribe(({ manualInputDistanceInM, distanceInM, manualInputSymbolsHeight
 
 uiStore.subscribe(({ visitorIcon }) => {
     $visitorIcon.dataset.range = visitorIcon;
-});
-
-$showOnMap.addEventListener('click', function () {
-    $mapWrapper.classList.toggle('mapus--visible')
 });
 
 // Validate input into limits
