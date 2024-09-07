@@ -150,7 +150,7 @@
       this._toggleMeasure();
     },
     _findFarestPoint: function (coord1) {
-      return findFarestPoint(this._clickedLatLong, coord1, 0.1);
+      return findFarestPoint(this._clickedLatLong, coord1, 100);
     }
   });
   L.control.ruler = function (options) {
@@ -158,49 +158,112 @@
   };
 }, window));
 
-function findFarestPoint(coord1, coord2, maxDistanceInKm) {
-  const maxDistance = maxDistanceInKm / 6371;
-  const distance = distanceInRadians(coord1, coord2);
 
-  if (distance > maxDistance) {
-    const { lat: lat1, lng: lng1 } = coord1;
-    const { lat: lat2, lng: lng2 } = coord2;
+const earthRadiusInMeters = 6371e3; // Earth's radius in meters
 
-    const bearing = Math.atan2(
-      Math.sin(toRadians(lng2 - lng1)) * Math.cos(toRadians(lat2)),
-      Math.cos(toRadians(lat1)) * Math.sin(toRadians(lat2)) -
-      Math.sin(toRadians(lat1)) *
-      Math.cos(toRadians(lat2)) *
-      Math.cos(toRadians(lng2 - lng1))
-    );
+/**
+ * @typedef {Object} Coordinates
+ * @property {number} lat - Latitude of the coordinate.
+ * @property {number} lng - Longitude of the coordinate.
+ */
 
-    const lat1Rad = toRadians(lat1);
-    const lng1Rad = toRadians(lng1);
-
-    const latnRad = Math.asin(
-      Math.sin(lat1Rad) * Math.cos(maxDistance) +
-      Math.cos(lat1Rad) * Math.sin(maxDistance) * Math.cos(bearing)
-    );
-    const lngnRad =
-      lng1Rad +
-      Math.atan2(
-        Math.sin(bearing) * Math.sin(maxDistance) * Math.cos(lat1Rad),
-        Math.cos(maxDistance) - Math.sin(lat1Rad) * Math.sin(latnRad)
-      );
-
-    const latn = (latnRad * 180) / Math.PI;
-    const lngn = (lngnRad * 180) / Math.PI + 360;
-
-    return { lat: latn, lng: lngn % 360 };
+/**
+ * Finds the farthest point within a maximum distance from the starting coordinate.
+ *
+ * @param {Coordinates} coord1 - The starting coordinate.
+ * @param {Coordinates} coord2 - The ending coordinate.
+ * @param {number} maxDistanceInMeters - The maximum distance in meters.
+ * @returns {Coordinates} The coordinates of the farthest point within the maximum distance.
+ */
+function findFarestPoint(coord1, coord2, maxDistanceInMeters) {
+  const distance = distanceInRadians(coord1, coord2) * earthRadiusInMeters; // Convert to meters
+  console.log('distance', distance, coord1, coord2);
+  if (distance >= maxDistanceInMeters) {
+    return getPointCoordinates(coord1, coord2, maxDistanceInMeters);
   } else {
-    return coord2;
+    const targetDistance = roundToNearest(distance, 0.5);
+    return getPointCoordinates(coord1, coord2, targetDistance);
   }
 }
 
+/**
+ * Calculates the coordinates of a point at a specified distance and bearing from a starting coordinate.
+ *
+ * @param {Coordinates} coord1 - The starting coordinate.
+ * @param {Coordinates} coord2 - The ending coordinate.
+ * @param {number} distance - The distance in meters.
+ * @returns {Coordinates} The coordinates of the point at the specified distance.
+ */
+function getPointCoordinates(coord1, coord2, distance) {
+  const { lat: lat1, lng: lng1 } = coord1;
+  const { lat: lat2, lng: lng2 } = coord2;
+
+  const bearing = Math.atan2(
+    Math.sin(toRadians(lng2 - lng1)) * Math.cos(toRadians(lat2)),
+    Math.cos(toRadians(lat1)) * Math.sin(toRadians(lat2)) -
+    Math.sin(toRadians(lat1)) *
+    Math.cos(toRadians(lat2)) *
+    Math.cos(toRadians(lng2 - lng1))
+  );
+
+  const lat1Rad = toRadians(lat1);
+  const lng1Rad = toRadians(lng1);
+
+  const latnRad = Math.asin(
+    Math.sin(lat1Rad) * Math.cos(distance / earthRadiusInMeters) +
+    Math.cos(lat1Rad) * Math.sin(distance / earthRadiusInMeters) * Math.cos(bearing)
+  );
+  const lngnRad =
+    lng1Rad +
+    Math.atan2(
+      Math.sin(bearing) * Math.sin(distance / earthRadiusInMeters) * Math.cos(lat1Rad),
+      Math.cos(distance / earthRadiusInMeters) - Math.sin(lat1Rad) * Math.sin(latnRad)
+    );
+
+  const lat = (latnRad * 180) / Math.PI;
+  const lng = (lngnRad * 180) / Math.PI + 360;
+
+  return { lat, lng: lng % 360 };
+}
+
+/**
+ * Converts degrees to radians.
+ *
+ * @param {number} degrees - The angle in degrees.
+ * @returns {number} The angle in radians.
+ */
 function toRadians(degrees) {
   return degrees * Math.PI / 180;
 }
 
+/**
+ * Converts a value in radians to kilometers.
+ *
+ * @param {number} value - The value in radians.
+ * @returns {number} The value in kilometers.
+ */
+function convertRadiansToKilometers(value) {
+  return value * 6371;
+}
+
+/**
+ * Rounds a value to the nearest specified step.
+ *
+ * @param {number} value - The value to round.
+ * @param {number} step - The step to round to.
+ * @returns {number} The rounded value.
+ */
+function roundToNearest(value, step) {
+  return Math.round(value / step) * step;
+}
+
+/**
+ * Calculates the distance in radians between two coordinates.
+ *
+ * @param {Coordinates} coord1 - The first coordinate.
+ * @param {Coordinates} coord2 - The second coordinate.
+ * @returns {number} The distance in radians.
+ */
 function distanceInRadians(coord1, coord2) {
   const { lat: lat1, lng: lng1 } = coord1;
   const { lat: lat2, lng: lng2 } = coord2;
@@ -218,8 +281,4 @@ function distanceInRadians(coord1, coord2) {
     Math.cos(lat2Rad);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return c;
-}
-
-function convertRadiansToKilometers(value) {
-  return value * 6371;
 }

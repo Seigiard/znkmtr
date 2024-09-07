@@ -7,7 +7,11 @@ const attributeLabels = [
 initMap({
     center: [46.48491831248254, 30.739801915137466],
     zoom: 17, // 20 max
-    attributionControl: false
+    attributionControl: false,
+    fullscreenControl: true,
+    fullscreenControlOptions: {
+        position: 'topleft'
+    }
 });
 
 function initMap(mapOptions) {
