@@ -1,0 +1,12 @@
+{
+  "name": "znkmtr",
+  "private": true,
+  "scripts": {
+    "lint": "npm run lint:anti-slop",
+    "lint:anti-slop": "oxlint --config .oxlintrc.json ."
+  },
+  "devDependencies": {
+    "@oxlint/plugins": "1.87.0",
+    "oxlint": "1.87.0"
+  }
+}
